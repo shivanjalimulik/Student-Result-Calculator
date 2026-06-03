@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Calculator & Records System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-100: #f1f5f9;
+            --violet-600: #7c3aed;
+            --violet-700: #6d28d9;
+            --emerald-500: #10b981;
+            --amber-500: #f59e0b;
+            --rose-500: #ef4444;
+            --indigo-500: #6366f1;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: var(--slate-900);
+            overflow-x: hidden;
+        }
+
+        /* Navbar Styling */
+        .acad-navbar {
+            background-color: var(--slate-900);
+            border-bottom: 3px solid var(--violet-600);
+        }
+        .brand-text {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+        .brand-logo-icon {
+            color: var(--violet-600);
+            font-size: 1.5rem;
+        }
+
+        /* Cards & Containers */
+        .dashboard-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+        .dashboard-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Metric Highlights */
+        .metric-pill {
+            background-color: #f5f3ff;
+            border-left: 4px solid var(--violet-600);
+            border-radius: 4px;
+        }
+
+        /* Badge Customization */
+        .badge-gpa-a { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .badge-gpa-b { background-color: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+        .badge-gpa-c { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-gpa-d { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-gpa-f { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        /* Custom Local File system UI */
+        .file-editor-header {
+            background-color: var(--slate-800);
+            color: #ffffff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        .file-editor-body {
+            background-color: var(--slate-900);
+            color: #38bdf8;
+            font-family: 'Fira Code', monospace;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            font-size: 0.85rem;
+            resize: none;
+            outline: none;
+            border: none;
+            line-height: 1.5;
+        }
+
+        /* Python Interactive Terminal */
+        .cli-terminal {
+            background-color: #0b0f19;
+            color: #a7f3d0;
+            font-family: 'Fira Code', monospace;
+            border-radius: 10px;
+            padding: 1.2rem;
+            min-height: 250px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .terminal-prompt {
+            color: var(--violet-600);
+            font-weight: bold;
+        }
+        .terminal-textbox {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            width: 100%;
+            outline: none;
+        }
+
+        /* Code Window styling */
+        .code-explorer {
+            background-color: #1e1e2e;
+            color: #f8f8f2;
+            font-family: 'Fira Code', monospace;
+            border-radius: 10px;
+            padding: 1.5rem;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .subject-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .animated-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SYSTEM ALERTS CONTAINER -->
+    <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1060;"></div>
+
+    <!-- MAIN NAV -->
+    <nav class="navbar navbar-expand-lg navbar-dark acad-navbar py-3 shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="fa-solid fa-graduation-cap brand-logo-icon"></i>
+                <span class="brand-text">EduLog <span class="text-info">Result Calculator</span></span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2 px-3 rounded-pill">
+                    <i class="fa-solid fa-file-shield me-1"></i> File Handling Active
+                </span>
+                <span class="text-white-50 small d-none d-md-inline">System Engine: <strong>Python 3.11</strong></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENT LAYOUT -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- WORKSPACE OVERVIEW BANNER -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="p-3 bg-white border rounded-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-primary-color"><i class="fa-solid fa-file-code me-2 text-violet-600"></i>Local File Persistence Simulator</h5>
+                        <p class="text-muted small mb-0">Calculated results securely compile grades, store to local simulated memory logs, and update stats via python architecture logic.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-dark" onclick="resetSimulatedFiles()"><i class="fa-solid fa-rotate-left me-1"></i> Reset CSV File</button>
+                        <button class="btn btn-sm btn-violet bg-violet-600 text-white" onclick="downloadCSVFile()"><i class="fa-solid fa-file-csv me-1"></i> Export .CSV File</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI SUMMARY METRICS -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-medium d-block mb-1">Durable Records Saved</span>
+                        <h3 class="fw-bold mb-0" id="metric-total-students">5</h3>
+                    </div>
+                    <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3 fs-4"><i class="fa-solid fa-folder-open"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-medium d-block mb-1">Class Average Class</span>
+                        <h3 class="fw-bold mb-0" id="metric-class-avg">78.5%</h3>
+                    </div>
+                    <div class="p-3 bg-violet bg-opacity-10 text-violet-600 rounded-3 fs-4"><i class="fa-solid fa-calculator"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-medium d-block mb-1">Total Pass Rate</span>
+                        <h3 class="fw-bold mb-0 text-success" id="metric-pass-rate">80%</h3>
+                    </div>
+                    <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 fs-4"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-card p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-medium d-block mb-1">Failed/At Risk</span>
+                        <h3 class="fw-bold mb-0 text-danger" id="metric-fail-count">1</h3>
+                    </div>
+                    <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3 fs-4"><i class="fa-solid fa-circle-xmark"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CORE GRID -->
+        <div class="row g-4">
+
+            <!-- LEFT WORKSPACE: INTAKE & SYSTEM SHELL -->
+            <div class="col-lg-5">
+
+                <!-- ADD NEW RECORD CARD -->
+                <div class="dashboard-card p-4 mb-4">
+                    <h5 class="fw-bold mb-3 text-primary-color"><i class="fa-solid fa-user-plus me-1 text-violet-600"></i> New Record Calculation Input</h5>
+                    <form id="record-form">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold text-muted small">Student Full Name</label>
+                                <input type="text" class="form-control" id="stud-name" placeholder="e.g. Liam Neeson" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold text-muted small">Roll ID / Roll No</label>
+                                <input type="text" class="form-control" id="stud-roll" placeholder="e.g. 2025-014" required>
+                            </div>
+                        </div>
+
+                        <label class="form-label fw-semibold text-muted d-block small mb-2">Subject Performance Grades (0 - 100)</label>
+                        <div class="subject-input-grid mb-3">
+                            <div>
+                                <label class="small text-muted font-monospace">Math</label>
+                                <input type="number" class="form-control form-control-sm" id="grade-math" min="0" max="100" value="85" required>
+                            </div>
+                            <div>
+                                <label class="small text-muted font-monospace">Science</label>
+                                <input type="number" class="form-control form-control-sm" id="grade-sci" min="0" max="100" value="78" required>
+                            </div>
+                            <div>
+                                <label class="small text-muted font-monospace">English</label>
+                                <input type="number" class="form-control form-control-sm" id="grade-eng" min="0" max="100" value="92" required>
+                            </div>
+                            <div>
+                                <label class="small text-muted font-monospace">History</label>
+                                <input type="number" class="form-control form-control-sm" id="grade-hist" min="0" max="100" value="80" required>
+                            </div>
+                            <div>
+                                <label class="small text-muted font-monospace">CompSci</label>
+                                <input type="number" class="form-control form-control-sm" id="grade-cs" min="0" max="100" value="95" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-violet bg-violet-600 text-white fw-semibold py-2">
+                                <i class="fa-solid fa-calculator me-1"></i> Calculate and Persist File
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- PERSISTED LOCAL FILE VIEW (CSV ENGINE) -->
+                <div class="dashboard-card overflow-hidden mb-4">
+                    <div class="file-editor-header px-3 py-2 d-flex justify-content-between align-items-center">
+                        <span class="d-flex align-items-center gap-2"><i class="fa-solid fa-file-csv text-success"></i> students_records.csv [Disk Mode]</span>
+                        <span class="badge bg-secondary">UTF-8 File System</span>
+                    </div>
+                    <textarea class="file-editor-body w-100 p-3" id="csv-file-editor" rows="10" spellcheck="false" oninput="syncFromCSVEditor()"></textarea>
+                    <div class="bg-light p-2 border-top text-center">
+                        <span class="text-muted small"><i class="fa-solid fa-circle-info me-1"></i> Edit the raw CSV lines directly. The data parses in real-time!</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT WORKSPACE: LIVE DATABASE TABLE & TERMINAL INTERACTION -->
+            <div class="col-lg-7">
+
+                <!-- WORKSPACE TAB BAR -->
+                <div class="card border-0 shadow-sm p-3 mb-4 rounded-3 bg-white">
+                    <ul class="nav nav-pills" id="resultTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-semibold" id="table-tab" data-bs-toggle="tab" data-bs-target="#table-pane" type="button" role="tab">
+                                <i class="fa-solid fa-database me-1"></i> Active Record Set
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-semibold" id="terminal-tab" data-bs-toggle="tab" data-bs-target="#terminal-pane" type="button" role="tab">
+                                <i class="fa-solid fa-square-terminal me-1"></i> CLI python.exe Sandbox
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-semibold" id="code-tab" data-bs-toggle="tab" data-bs-target="#code-pane" type="button" role="tab">
+                                <i class="fa-solid fa-code me-1"></i> Python Script Logic
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- TAB CONTENT -->
+                <div class="tab-content" id="resultTabContent">
+
+                    <!-- TAB 1: RESULT TABLE -->
+                    <div class="tab-pane fade show active" id="table-pane" role="tabpanel">
+                        <div class="dashboard-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold mb-0">Calculated Aggregates DB</h6>
+                                <div class="input-group input-group-sm w-50">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-filter"></i></span>
+                                    <input type="text" id="table-search" class="form-control border-start-0" placeholder="Search student name..." oninput="filterRecordsTable()">
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Student (Roll)</th>
+                                            <th class="text-center">Math</th>
+                                            <th class="text-center">Sci</th>
+                                            <th class="text-center">Eng</th>
+                                            <th class="text-center">Hist</th>
+                                            <th class="text-center">CS</th>
+                                            <th class="text-center bg-light">Average</th>
+                                            <th class="text-center">Grade</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="student-table-body">
+                                        <!-- Dynamically Rendered -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: TERMINAL INTERACTION -->
+                    <div class="tab-pane fade" id="terminal-pane" role="tabpanel">
+                        <div class="dashboard-card p-4">
+                            <h5 class="fw-bold mb-1"><i class="fa-solid fa-terminal text-success me-1"></i> Interactive Python Console Run</h5>
+                            <p class="text-muted small">Execute standalone automation modules using command line parameters to query local file structures.</p>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-secondary w-100 text-start py-2" onclick="runTerminalCommand('python calc_system.py --stats')">
+                                        <i class="fa-solid fa-chart-line text-info me-1"></i> run calculation statistics
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-secondary w-100 text-start py-2" onclick="runTerminalCommand('python calc_system.py --gpa-a')">
+                                        <i class="fa-solid fa-user-graduate text-success me-1"></i> query elite (Grade A) rosters
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-secondary w-100 text-start py-2" onclick="runTerminalCommand('python calc_system.py --read-raw')">
+                                        <i class="fa-solid fa-file-shield text-warning me-1"></i> view raw input buffers
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-secondary w-100 text-start py-2" onclick="runTerminalCommand('python calc_system.py --help')">
+                                        <i class="fa-solid fa-circle-question text-violet-600 me-1"></i> display execution help parameters
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="cli-terminal mb-3" id="terminal-container">
+                                <div class="text-muted mb-2"># EduLog Python Record persisting kernel v1.02a</div>
+                                <div class="text-muted mb-2"># Local csv system file discovered on device memory</div>
+                                <div id="terminal-history"></div>
+                                <div class="terminal-input-line">
+                                    <span class="terminal-prompt">&gt;&gt;&gt;</span>
+                                    <input type="text" id="terminal-user-input" class="terminal-textbox" placeholder="Type python commands..." onkeydown="handleTerminalSubmit(event)">
+                                </div>
+                            </div>
+                            <button class="btn btn-xs btn-outline-danger float-end py-1 px-3" onclick="clearTerminal()"><i class="fa-solid fa-trash-can"></i> Clear Screen</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: CODEBASE EXAMINER -->
+                    <div class="tab-pane fade" id="code-pane" role="tabpanel">
+                        <div class="dashboard-card p-4 bg-white">
+                            <h5 class="fw-bold mb-2"><i class="fa-solid fa-code text-dark me-2"></i>Standalone Python Implementation</h5>
+                            <p class="text-muted small">Inspect file-handling mechanisms, calculation scale loops, and robust error validation written in python.</p>
+
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-sm btn-dark" onclick="switchCodeFile('calculator')">calculator.py</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="switchCodeFile('file_handling')">file_ops.py</button>
+                            </div>
+
+                            <div class="code-explorer">
+                                <pre id="code-content-window">
+<span class="text-warning">import</span> csv
+<span class="text-warning">import</span> os
+
+<span class="text-info">class</span> <span class="text-success">StudentResultCalculator</span>:
+    <span class="text-info">def</span> <span class="text-success">__init__</span>(self, filepath=<span class="text-success">'students_records.csv'</span>):
+        self.filepath = filepath
+        # Validate existence of persistent file structure
+        <span class="text-info">if not</span> os.path.exists(self.filepath):
+            self.create_default_file()
+
+    <span class="text-info">def</span> <span class="text-success">calculate_grades</span>(self, math, sci, eng, hist, cs):
+        <span class="text-info">"""Evaluate averages and standard letter conversions"""</span>
+        total = math + sci + eng + hist + cs
+        avg = total / 5.0
+        
+        <span class="text-info">if</span> avg >= 90: grade = <span class="text-success">'A'</span>
+        <span class="text-info">elif</span> avg >= 80: grade = <span class="text-success">'B'</span>
+        <span class="text-info">elif</span> avg >= 70: grade = <span class="text-success">'C'</span>
+        <span class="text-info">elif</span> avg >= 60: grade = <span class="text-success">'D'</span>
+        <span class="text-info">else</span>: grade = <span class="text-success">'F'</span>
+        
+        status = <span class="text-success">'Pass'</span> <span class="text-info">if</span> grade != <span class="text-success">'F'</span> <span class="text-info">else</span> <span class="text-success">'Fail'</span>
+        <span class="text-info">return</span> round(avg, 2), grade, status
+
+    <span class="text-info">def</span> <span class="text-success">append_record</span>(self, name, roll_id, grades):
+        <span class="text-info">"""Write calculation records securely to CSV storage"""</span>
+        avg, grade, status = self.calculate_grades(*grades)
+        
+        <span class="text-info">with</span> open(self.filepath, mode=<span class="text-success">'a'</span>, newline=<span class="text-success">''</span>, encoding=<span class="text-success">'utf-8'</span>) <span class="text-info">as</span> file:
+            writer = csv.writer(file)
+            writer.writerow([name, roll_id, *grades, avg, grade, status])
+        <span class="text-info">return True</span>
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BOOTSTRAP JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- CALC ENGINE INTERACTIVE JAVASCRIPT LOGIC -->
+    <script>
+        // Core Simulated In-Memory Database / Local storage
+        let defaultStudents = [
+            { name: "Emily Watson", roll: "2025-001", math: 92, sci: 88, eng: 95, hist: 85, cs: 98, avg: 91.6, grade: "A", status: "Pass" },
+            { name: "James Smith", roll: "2025-002", math: 74, sci: 65, eng: 80, hist: 72, cs: 68, avg: 71.8, grade: "C", status: "Pass" },
+            { name: "Sophia Martinez", roll: "2025-003", math: 45, sci: 52, eng: 58, hist: 60, cs: 48, avg: 52.6, grade: "F", status: "Fail" },
+            { name: "Jackson Roy", roll: "2025-004", math: 88, sci: 90, eng: 85, hist: 82, cs: 89, avg: 86.8, grade: "B", status: "Pass" },
+            { name: "Amara Okoro", roll: "2025-005", math: 61, sci: 64, eng: 67, hist: 59, cs: 62, avg: 62.6, grade: "D", status: "Pass" }
+        ];
+
+        let students = JSON.parse(localStorage.getItem('student_records_sim')) || [...defaultStudents];
+        let tableSearchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            syncCSVView();
+            updateKPIs();
+        });
+
+        // Trigger safe calculations
+        function calculateGradeAndScale(math, sci, eng, hist, cs) {
+            const sum = math + sci + eng + hist + cs;
+            const avg = parseFloat((sum / 5).toFixed(2));
+            let grade = 'F';
+            let status = 'Fail';
+
+            if (avg >= 90) grade = 'A';
+            else if (avg >= 80) grade = 'B';
+            else if (avg >= 70) grade = 'C';
+            else if (avg >= 60) grade = 'D';
+
+            if (grade !== 'F') status = 'Pass';
+
+            return { avg, grade, status };
+        }
+
+        // Render record table
+        function renderTable() {
+            const tbody = document.getElementById('student-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = students.filter(student => {
+                return student.name.toLowerCase().includes(tableSearchQuery);
+            });
+
+            filtered.forEach((stud, idx) => {
+                const badgeClass = getBadgeClass(stud.grade);
+                const statusBadge = stud.status === 'Pass' ? 
+                    `<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20">Pass</span>` :
+                    `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20">Fail</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="fw-bold text-dark">${escapeHTML(stud.name)}</div>
+                        <span class="text-muted font-monospace" style="font-size:0.75rem;">Roll: ${escapeHTML(stud.roll)}</span>
+                    </td>
+                    <td class="text-center font-monospace small">${stud.math}</td>
+                    <td class="text-center font-monospace small">${stud.sci}</td>
+                    <td class="text-center font-monospace small">${stud.eng}</td>
+                    <td class="text-center font-monospace small">${stud.hist}</td>
+                    <td class="text-center font-monospace small">${stud.cs}</td>
+                    <td class="text-center bg-light font-monospace fw-bold">${stud.avg}%</td>
+                    <td class="text-center"><span class="badge ${badgeClass}">${stud.grade}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-xs btn-outline-danger py-0 px-2 fs-7" onclick="deleteRecord('${escapeHTML(stud.roll)}')">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterRecordsTable() {
+            tableSearchQuery = document.getElementById('table-search').value.toLowerCase();
+            renderTable();
+        }
+
+        function getBadgeClass(grade) {
+            switch(grade) {
+                case 'A': return 'badge-gpa-a';
+                case 'B': return 'badge-gpa-b';
+                case 'C': return 'badge-gpa-c';
+                case 'D': return 'badge-gpa-d';
+                default: return 'badge-gpa-f';
+            }
+        }
+
+        // CSV Local Writer persistence Simulator (Simulating standard open(filepath, 'w'))
+        function syncCSVView() {
+            const csvTextarea = document.getElementById('csv-file-editor');
+            let lines = ["name,roll_no,math,science,english,history,compsci,avg,grade,status"];
+            
+            students.forEach(stud => {
+                lines.push(`"${stud.name}",${stud.roll},${stud.math},${stud.sci},${stud.eng},${stud.hist},${stud.cs},${stud.avg},${stud.grade},${stud.status}`);
+            });
+
+            csvTextarea.value = lines.join("\n");
+            saveStateToStorage();
+        }
+
+        // Real-Time Sync backwards from CSV editor modifications
+        function syncFromCSVEditor() {
+            const csvInput = document.getElementById('csv-file-editor').value.trim();
+            const lines = csvInput.split("\n");
+            let newStudents = [];
+
+            try {
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    // Standard custom regex for safely parsing CSV values
+                    const parts = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (parts && parts.length >= 10) {
+                        const name = parts[0].replace(/"/g, '').trim();
+                        const roll = parts[1].trim();
+                        const math = parseInt(parts[2]);
+                        const sci = parseInt(parts[3]);
+                        const eng = parseInt(parts[4]);
+                        const hist = parseInt(parts[5]);
+                        const cs = parseInt(parts[6]);
+                        
+                        // Recalculate based on custom flow logic to enforce rules
+                        const calc = calculateGradeAndScale(math, sci, eng, hist, cs);
+
+                        newStudents.push({
+                            name, roll, math, sci, eng, hist, cs,
+                            avg: calc.avg, grade: calc.grade, status: calc.status
+                        });
+                    }
+                }
+                students = newStudents;
+                renderTable();
+                updateKPIs();
+            } catch (err) {
+                // Keep UI relaxed and allow partial/broken input while user is writing
+            }
+        }
+
+        // Submitting manual form input calculations
+        document.getElementById('record-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('stud-name').value.trim();
+            const roll = document.getElementById('stud-roll').value.trim();
+            const math = parseInt(document.getElementById('grade-math').value);
+            const sci = parseInt(document.getElementById('grade-sci').value);
+            const eng = parseInt(document.getElementById('grade-eng').value);
+            const hist = parseInt(document.getElementById('grade-hist').value);
+            const cs = parseInt(document.getElementById('grade-cs').value);
+
+            // Validation
+            if (students.some(s => s.roll === roll)) {
+                showToast(`Record with Roll ID '${roll}' already persistent in local storage.`, 'danger');
+                return;
+            }
+
+            const calc = calculateGradeAndScale(math, sci, eng, hist, cs);
+            const newRecord = { name, roll, math, sci, eng, hist, cs, avg: calc.avg, grade: calc.grade, status: calc.status };
+
+            students.push(newRecord);
+            showToast(`Recorded calculation and appended record safely to CSV!`);
+            
+            // Clean inputs
+            document.getElementById('stud-name').value = '';
+            document.getElementById('stud-roll').value = '';
+
+            renderTable();
+            syncCSVView();
+            updateKPIs();
+        });
+
+        // Trigger deletions
+        function deleteRecord(roll) {
+            students = students.filter(s => s.roll !== roll);
+            showToast(`Record with Roll ID '${roll}' has been purged from CSV memory logs.`, 'danger');
+            renderTable();
+            syncCSVView();
+            updateKPIs();
+        }
+
+        // Reset and Download operations
+        function resetSimulatedFiles() {
+            students = [...defaultStudents];
+            renderTable();
+            syncCSVView();
+            updateKPIs();
+            showToast("Simulated CSV File reverted safely to initial state.", "info");
+        }
+
+        function downloadCSVFile() {
+            const csvData = document.getElementById('csv-file-editor').value;
+            const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "students_records.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Successfully downloaded physical records.csv onto local storage!");
+        }
+
+        // Live KPI Aggregations
+        function updateKPIs() {
+            const total = students.length;
+            const passCount = students.filter(s => s.status === 'Pass').length;
+            const failCount = students.filter(s => s.status === 'Fail').length;
+            
+            let classAvg = 0;
+            if (total > 0) {
+                const totalSum = students.reduce((acc, s) => acc + s.avg, 0);
+                classAvg = (totalSum / total).toFixed(1);
+            }
+
+            const passPercent = total > 0 ? Math.round((passCount / total) * 100) : 0;
+
+            document.getElementById('metric-total-students').innerText = total;
+            document.getElementById('metric-class-avg').innerText = `${classAvg}%`;
+            document.getElementById('metric-pass-rate').innerText = `${passPercent}%`;
+            document.getElementById('metric-fail-count').innerText = failCount;
+        }
+
+        // Standard Storage Saving
+        function saveStateToStorage() {
+            localStorage.setItem('student_records_sim', JSON.stringify(students));
+        }
+
+        // Toast Helpers
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const colorClass = type === 'success' ? 'text-success border-success' : type === 'danger' ? 'text-danger border-danger' : 'text-primary border-primary';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'danger' ? 'fa-circle-xmark' : 'fa-info-circle';
+            
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center bg-white ${colorClass} border-0 shadow-sm show mb-2`;
+            toastEl.setAttribute('role', 'alert');
+            toastEl.innerHTML = `
+                <div class="d-flex text-dark">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        <i class="fa-solid ${icon} ${type === 'success' ? 'text-success' : type === 'danger' ? 'text-danger' : 'text-primary'}"></i>
+                        <div class="small fw-semibold">${message}</div>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            container.appendChild(toastEl);
+            setTimeout(() => {
+                toastEl.remove();
+            }, 3500);
+        }
+
+        // Safety HTML escaper
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // ================== PY CLI TERMINAL SIMULATOR ==================
+        function handleTerminalSubmit(event) {
+            if (event.key === 'Enter') {
+                const commandInput = document.getElementById('terminal-user-input');
+                const rawCmd = commandInput.value.trim();
+                if (rawCmd) {
+                    runTerminalCommand(rawCmd);
+                    commandInput.value = '';
+                }
+            }
+        }
+
+        function runTerminalCommand(commandString) {
+            const history = document.getElementById('terminal-history');
+            const container = document.getElementById('terminal-container');
+            
+            const userLine = document.createElement('div');
+            userLine.className = 'mb-1';
+            userLine.innerHTML = `<span class="terminal-prompt">&gt;&gt;&gt;</span> <span class="text-white">${escapeHTML(commandString)}</span>`;
+            history.appendChild(userLine);
+
+            const responseLine = document.createElement('div');
+            responseLine.className = 'mb-3 font-monospace text-info small';
+            responseLine.style.whiteSpace = 'pre-wrap';
+
+            // Custom evaluation router for simulated terminal behavior
+            const normalized = commandString.toLowerCase().trim();
+            if (normalized === 'python calc_system.py --stats') {
+                const total = students.length;
+                const topStud = [...students].sort((a,b) => b.avg - a.avg)[0];
+                const topName = topStud ? topStud.name : "N/A";
+                const topAvg = topStud ? topStud.avg : 0;
+                
+                responseLine.innerHTML = `[EduLog Calculation Pipeline: SUCCESS]\n` +
+                    `Total Scanned Records: ${total}\n` +
+                    `Class Average Aggregates: ${document.getElementById('metric-class-avg').innerText}\n` +
+                    `Class Success rate: ${document.getElementById('metric-pass-rate').innerText}\n` +
+                    `Valedictorian Status: ${topName} (${topAvg}%)`;
+            } else if (normalized === 'python calc_system.py --gpa-a') {
+                const aStudents = students.filter(s => s.grade === 'A');
+                if (aStudents.length === 0) {
+                    responseLine.innerHTML = `No students matching search filter 'Grade A' found in students_records.csv.`;
+                } else {
+                    let rows = aStudents.map(s => ` - ${s.name} (Roll: ${s.roll}) - Avg: ${s.avg}%`).join("\n");
+                    responseLine.innerHTML = `[PERSISTED ROSTER: GRADE 'A']\n${rows}`;
+                }
+            } else if (normalized === 'python calc_system.py --read-raw') {
+                const rawBuffer = document.getElementById('csv-file-editor').value;
+                responseLine.innerHTML = `[RAW DEVICE READBUFFER STREAMING: 100%]\n${escapeHTML(rawBuffer)}`;
+            } else if (normalized === 'python calc_system.py --help') {
+                responseLine.innerHTML = `EduLog Standalone Student Result Calculation Interface\n` +
+                    `Usage: python calc_system.py [PARAMETERS]\n\n` +
+                    `Parameters:\n` +
+                    `  --stats       Extracts computed aggregates from device storage.\n` +
+                    `  --gpa-a       Dumps high tier (A-Grade) candidates.\n` +
+                    `  --read-raw    Outputs CSV character stream directly to screen.`;
+            } else {
+                responseLine.innerHTML = `Command execution warning: '${escapeHTML(commandString)}' unrecognized in calculation dependencies.\n` +
+                    `Try: 'python calc_system.py --help' to list operational commands.`;
+            }
+
+            history.appendChild(responseLine);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal-history').innerHTML = '';
+        }
+
+        // Code view file switcher
+        function switchCodeFile(fileType) {
+            const btnContainer = event.target.parentNode;
+            btnContainer.querySelectorAll('button').forEach(btn => btn.className = 'btn btn-sm btn-outline-secondary');
+            event.target.className = 'btn btn-sm btn-dark';
+
+            const codeWin = document.getElementById('code-content-window');
+
+            const fileContents = {
+                calculator: `<span class="text-warning">import</span> csv
+<span class="text-warning">import</span> os
+
+<span class="text-info">class</span> <span class="text-success">StudentResultCalculator</span>:
+    <span class="text-info">def</span> <span class="text-success">__init__</span>(self, filepath=<span class="text-success">'students_records.csv'</span>):
+        self.filepath = filepath
+        # Validate existence of persistent file structure
+        <span class="text-info">if not</span> os.path.exists(self.filepath):
+            self.create_default_file()
+
+    <span class="text-info">def</span> <span class="text-success">calculate_grades</span>(self, math, sci, eng, hist, cs):
+        <span class="text-info">"""Evaluate averages and standard letter conversions"""</span>
+        total = math + sci + eng + hist + cs
+        avg = total / 5.0
+        
+        <span class="text-info">if</span> avg >= 90: grade = <span class="text-success">'A'</span>
+        <span class="text-info">elif</span> avg >= 80: grade = <span class="text-success">'B'</span>
+        <span class="text-info">elif</span> avg >= 70: grade = <span class="text-success">'C'</span>
+        <span class="text-info">elif</span> avg >= 60: grade = <span class="text-success">'D'</span>
+        <span class="text-info">else</span>: grade = <span class="text-success">'F'</span>
+        
+        status = <span class="text-success">'Pass'</span> <span class="text-info">if</span> grade != <span class="text-success">'F'</span> <span class="text-info">else</span> <span class="text-success">'Fail'</span>
+        <span class="text-info">return</span> round(avg, 2), grade, status
+
+    <span class="text-info">def</span> <span class="text-success">append_record</span>(self, name, roll_id, grades):
+        <span class="text-info">"""Write calculation records securely to CSV storage"""</span>
+        avg, grade, status = self.calculate_grades(*grades)
+        
+        <span class="text-info">with</span> open(self.filepath, mode=<span class="text-success">'a'</span>, newline=<span class="text-success">''</span>, encoding=<span class="text-success">'utf-8'</span>) <span class="text-info">as</span> file:
+            writer = csv.writer(file)
+            writer.writerow([name, roll_id, *grades, avg, grade, status])
+        <span class="text-info">return True</span>`,
+
+                file_handling: `<span class="text-warning">import</span> csv
+<span class="text-warning">import</span> sys
+
+<span class="text-info">def</span> <span class="text-success">read_all_records</span>(filepath=<span class="text-success">'students_records.csv'</span>):
+    <span class="text-info">"""Durable safe-handling read iterator"""</span>
+    records = []
+    <span class="text-info">try</span>:
+        <span class="text-info">with</span> open(filepath, mode=<span class="text-success">'r'</span>, encoding=<span class="text-success">'utf-8'</span>) <span class="text-info">as</span> file:
+            reader = csv.reader(file)
+            header = next(reader) # Skip CSV headers
+            <span class="text-info">for</span> row <span class="text-info">in</span> reader:
+                <span class="text-info">if</span> len(row) >= 10:
+                    records.append({
+                        <span class="text-success">'name'</span>: row[0],
+                        <span class="text-success">'roll'</span>: row[1],
+                        <span class="text-success">'grades'</span>: [int(x) <span class="text-info">for</span> x <span class="text-info">in</span> row[2:7]],
+                        <span class="text-success">'avg'</span>: float(row[7]),
+                        <span class="text-success">'grade'</span>: row[8],
+                        <span class="text-success">'status'</span>: row[9]
+                    })
+    <span class="text-info">except</span> FileNotFoundError:
+        print(f<span class="text-success">"Warning: {filepath} file structure missing from workspace disk."</span>)
+    <span class="text-info">except</span> ValueError <span class="text-info">as</span> ex:
+        print(f<span class="text-success">"Error parsing record variables: {ex}"</span>)
+    <span class="text-info">return</span> records`
+            };
+
+            codeWin.innerHTML = fileContents[fileType];
+        }
+
+    </script>
+</body>
+</html>
